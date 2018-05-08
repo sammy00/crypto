@@ -1,30 +1,60 @@
 package elliptic
 
+// Copyright 2010 The Go Authors. All rights reserved.
+// Copyright 2018 sammy00. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// This package operates, internally, on Jacobian coordinates. For a given
+// (x, y) position on the curve, the Jacobian coordinates are (x1, y1, z1)
+// where x = x1/z1^2 and y = y1/z1^3. The greatest speedups come when the whole
+// calculation can be performed within the transform (as in ScalarMult and
+// ScalarBaseMult). But even for Add and Double, it's faster to apply and
+// reverse the transform than to operate in affine coordinates.
+
+// References:
+//   [NSA]: Suite B implementer's guide to FIPS 186-3,
+//     http://www.nsa.gov/ia/_files/ecdsa.pdf
+//   [SECG]: SECG, SEC1
+//     http://www.secg.org/sec1-v2.pdf
+//   [hyperelliptic.org]
+//		 http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html
+
 import (
 	"math/big"
 	"sync"
 )
 
 var (
+	// koblitzInitOncer serves for one-time-only initialization of
+	// all internal KoblitzCurve instances
 	koblitzInitOncer sync.Once
-	secp256k1        *KoblitzCurve
+	// secp256k1 is an unexported KoblitzCurve which can be captured by P256k1()
+	secp256k1 *KoblitzCurve
 )
 
+// KoblitzCurve embeds the parameters of an elliptic curve and
+// also provides a generic, non-constant time implementation of Curve.
+// The detail of implementation refers to http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html
 type KoblitzCurve struct {
 	*CurveParams
 }
 
+// Add calculates (x1,y1)+(x2,y2) over the curve
 func (curve *KoblitzCurve) Add(x1, y1, x2, y2 *big.Int) (x, y *big.Int) {
 	z1 := zForAffine(x1, y1)
 	z2 := zForAffine(x2, y2)
 
 	return curve.affineFromJacobian(curve.addJacobian(x1, y1, z1, x2, y2, z2))
 }
+
+// Double calculates 2*(x,y)
 func (curve *KoblitzCurve) Double(x, y *big.Int) (xOut, yOut *big.Int) {
 	z := zForAffine(x, y)
 	return curve.affineFromJacobian(curve.doubleJacobian(x, y, z))
 }
 
+// IsOnCurve checks if the given point (x,y) is on the curve
 func (curve *KoblitzCurve) IsOnCurve(x, y *big.Int) bool {
 	// y^2 = x^3 + b
 
@@ -41,18 +71,17 @@ func (curve *KoblitzCurve) IsOnCurve(x, y *big.Int) bool {
 	return 0 == rhs.Cmp(y2)
 }
 
+// Params returns the parameters specification for this curve
 func (curve *KoblitzCurve) Params() *CurveParams {
 	return curve.CurveParams
 }
 
-func P256k1() Curve {
-	koblitzInitOncer.Do(initAll)
-	return secp256k1
-}
-
+// ScalarBaseMult calculates k*G
 func (curve *KoblitzCurve) ScalarBaseMult(k []byte) (x, y *big.Int) {
 	return curve.ScalarMult(curve.Gx, curve.Gy, k)
 }
+
+// ScalarMult estimates k*(x1,y1)
 func (curve *KoblitzCurve) ScalarMult(x1, y1 *big.Int, k []byte) (x, y *big.Int) {
 	z1 := new(big.Int).SetInt64(1)
 	xx, yy, zz := new(big.Int), new(big.Int), new(big.Int)
@@ -71,6 +100,7 @@ func (curve *KoblitzCurve) ScalarMult(x1, y1 *big.Int, k []byte) (x, y *big.Int)
 	return
 }
 
+// addJacobian estimate the sum of two Jacobian point (x1,y1,z1) and (x2,y2,z2)
 func (curve *KoblitzCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (x, y, z *big.Int) {
 	// http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	x, y, z = new(big.Int), new(big.Int), new(big.Int)
@@ -156,6 +186,8 @@ func (curve *KoblitzCurve) addJacobian(x1, y1, z1, x2, y2, z2 *big.Int) (x, y, z
 	return
 }
 
+// affineFromJacobian reverses the Jacobian transform. See the comment at the
+// top of the file. In case of point at the infinity, it returns (0,0).
 func (curve *KoblitzCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.Int) {
 	xOut, yOut = new(big.Int), new(big.Int)
 	// (z,y,z) is the point at the infinity
@@ -177,6 +209,8 @@ func (curve *KoblitzCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big
 	return xOut, yOut
 }
 
+// doubleJacobian takes a point in Jacobian coordinates, (x, y, z), and
+// returns its double, also in Jacobian form.
 func (curve *KoblitzCurve) doubleJacobian(x, y, z *big.Int) (xOut, yOut, zOut *big.Int) {
 	// see http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 	// A = x^2
@@ -225,6 +259,12 @@ func (curve *KoblitzCurve) doubleJacobian(x, y, z *big.Int) (xOut, yOut, zOut *b
 	return
 }
 
+// P256k1 returns the handle of secp256k1
+func P256k1() Curve {
+	koblitzInitOncer.Do(initAll)
+	return secp256k1
+}
+
 func initAll() {
 	initP256K1()
 }
@@ -245,6 +285,9 @@ func initP256K1() {
 	secp256k1.CurveParams = params
 }
 
+// zForAffine returns a Jacobian Z value for the affine point (x, y). If x and
+// y are zero, it assumes that they represent the point at infinity because (0,
+// 0) is not on the any of the curves handled here.
 func zForAffine(x, y *big.Int) *big.Int {
 	z := new(big.Int)
 	// (x,y) isn't the point at the infinity

@@ -1,3 +1,8 @@
+// Copyright 2010 The Go Authors. All rights reserved.
+// Copyright 2018 sammy00. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package elliptic implements several standard elliptic curves over prime fields.
 
 // It aims to decouple the tight binding between the ellptic.CurveParams and the elliptic.Curve in the elliptic package of the standard library. In our implementation, CurveParams serves simply as a container the parameter of EC parameters without any methods. So, any future curve to extend this our Curve interface just need embeds the CurveParams for specifying paramters, while implementing the Curve interface to their contents.
