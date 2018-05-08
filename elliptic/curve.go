@@ -1,3 +1,7 @@
+// Package elliptic implements several standard elliptic curves over prime fields.
+
+// It aims to decouple the tight binding between the ellptic.CurveParams and the elliptic.Curve in the elliptic package of the standard library. In our implementation, CurveParams serves simply as a container the parameter of EC parameters without any methods. So, any future curve to extend this our Curve interface just need embeds the CurveParams for specifying paramters, while implementing the Curve interface to their contents.
+
 package elliptic
 
 import (
@@ -12,6 +16,7 @@ type CurveParams elliptic.CurveParams
 // mask serves for key generation
 var mask = []byte{0xff, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f}
 
+// Curve specifies the necessary api for elliptic curves
 type Curve interface {
 	// Params returns the parameters for the curve.
 	Params() *CurveParams
@@ -28,6 +33,7 @@ type Curve interface {
 	ScalarBaseMult(k []byte) (x, y *big.Int)
 }
 
+// GenerateKey returns a public/private key pair. The private key is generated using the given reader, which must return random data.
 func GenerateKey(curve Curve, rand io.Reader) (priv []byte, x, y *big.Int, err error) {
 	N := curve.Params().N
 	bitSize := N.BitLen()
@@ -56,6 +62,7 @@ func GenerateKey(curve Curve, rand io.Reader) (priv []byte, x, y *big.Int, err e
 	return
 }
 
+// Marshal converts a point into the uncompressed form specified in section 4.3.6 of ANSI X9.62.
 func Marshal(curve Curve, x, y *big.Int) []byte {
 	byteLen := (curve.Params().BitSize + 7) >> 3
 
@@ -69,6 +76,7 @@ func Marshal(curve Curve, x, y *big.Int) []byte {
 	return ret
 }
 
+// Unmarshal converts a point, serialized by Marshal, into an (x,y) pair. It is an error if the point is not in uncompressed form or is not on the curve. On error, x = nil.
 func Unmarshal(curve Curve, data []byte) (x, y *big.Int) {
 	byteLen := (curve.Params().BitSize + 7) >> 3
 	if len(data) != 1+2*byteLen {
