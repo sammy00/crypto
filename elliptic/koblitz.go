@@ -17,6 +17,8 @@ package elliptic
 //     http://www.nsa.gov/ia/_files/ecdsa.pdf
 //   [SECG]: SECG, SEC1
 //     http://www.secg.org/sec1-v2.pdf
+//   [SECG]: SECG, SEC2
+// 		 http://www.secg.org/sec2-v2.pdf
 //   [hyperelliptic.org]
 //		 http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html
 

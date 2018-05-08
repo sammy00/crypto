@@ -1,4 +1,18 @@
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package ecdsa implements the Elliptic Curve Digital Signature Algorithm.
 package ecdsa
+
+// The main purpose of this reimplementation is for decoupling the
+// elliptic.Curve from the standard golang library.
+
+// References:
+//   [NSA]: Suite B implementer's guide to FIPS 186-3,
+//     http://www.nsa.gov/ia/_files/ecdsa.pdf
+//   [SECG]: SECG, SEC1
+//     http://www.secg.org/sec1-v2.pdf
 
 import (
 	"crypto"
@@ -9,26 +23,38 @@ import (
 	"github.com/sammy00/crypto/elliptic"
 )
 
+// one is the identity element in the field
 var one = new(big.Int).SetInt64(1)
 
+// PrivateKey represents an ECDSA private key.
 type PrivateKey struct {
 	PublicKey
-	D *big.Int
+	D *big.Int // private scalar
 }
 
+// PublicKey represents an ECDSA public key.
 type PublicKey struct {
 	elliptic.Curve
 	X, Y *big.Int
 }
 
+// ecdsaSignature assists in marshaling the signature
 type ecdsaSignature struct {
 	R, S *big.Int
 }
 
+// Public returns the public key corresponding to priv.
 func (priv *PrivateKey) Public() crypto.PublicKey {
 	return &priv.PublicKey
 }
 
+// Sign signs digest with priv, reading randomness from rand. The opts argument
+// is not currently used but, in keeping with the crypto.Signer interface,
+// should be the hash function used to digest the message.
+//
+// This method implements crypto.Signer, which is an interface to support keys
+// where the private part is kept in, for example, a hardware module. Common
+// uses should use the Sign function in this package directly.
 func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	r, s, err := Sign(rand, priv, digest)
 	if nil != err {
@@ -38,6 +64,7 @@ func (priv *PrivateKey) Sign(rand io.Reader, digest []byte, opts crypto.SignerOp
 	return asn1.Marshal(ecdsaSignature{r, s})
 }
 
+// GenerateKey generates a public and private key pair.
 func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
 	k, err := randFieldElement(c, rand)
 	if nil != err {
@@ -53,6 +80,11 @@ func GenerateKey(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
 	return priv, nil
 }
 
+// Sign signs a hash (which should be the result of hashing a larger message)
+// using the private key, priv. If the hash is longer than the bit-length of the
+// private key's curve order, the hash will be truncated to that length.  It
+// returns the signature as a pair of integers. The security of the private key
+// depends on the entropy of rand.
 func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err error) {
 	c := priv.PublicKey.Curve
 	N := c.Params().N
@@ -91,6 +123,8 @@ func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err err
 	return r, s, nil
 }
 
+// Verify verifies the signature in r, s of hash using the public key, pub. Its
+// return value records whether the signature is valid.
 func Verify(pub *PublicKey, hash []byte, r, s *big.Int) bool {
 	c := pub.Curve
 	N := c.Params().N
@@ -157,6 +191,8 @@ func hashToInt(hash []byte, c elliptic.Curve) *big.Int {
 	return ret
 }
 
+// randFieldElement returns a random element of the field underlying the given
+// curve using the procedure given in [NSA] A.2.1.
 func randFieldElement(c elliptic.Curve, rand io.Reader) (*big.Int, error) {
 	params := c.Params()
 	b := make([]byte, params.BitSize/8+8)
