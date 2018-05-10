@@ -13,6 +13,7 @@ type PublicKey struct {
 	X, Y *big.Int
 }
 
+// Compress the public key into a byte sequence
 func (pub *PublicKey) Compress() ([]byte, error) {
 	buf := make([]byte, PublicKeyCompressedLen)
 
@@ -26,6 +27,7 @@ func (pub *PublicKey) Compress() ([]byte, error) {
 	return buf, nil
 }
 
+// Decompress read in the curve and data to initialise the public key.
 func (pub *PublicKey) Decompress(curve elliptic.Curve, data []byte) error {
 	if len(data) != PublicKeyCompressedLen {
 		return errors.New("Invalid data length")
@@ -45,6 +47,7 @@ func (pub *PublicKey) Decompress(curve elliptic.Curve, data []byte) error {
 	return err
 }
 
+// UncompressedDecode populate the pub by decoding the given data over the given curve
 func (pub *PublicKey) UncompressedDecode(curve elliptic.Curve, data []byte) error {
 	if len(data) != PublicKeyUncompressedLen {
 		return errors.New("Invalid data length")
@@ -65,6 +68,8 @@ func (pub *PublicKey) UncompressedDecode(curve elliptic.Curve, data []byte) erro
 	return nil
 }
 
+// UncompressedEncode encodes the public key into a byte sequence
+// in the uncompressed form
 func (pub *PublicKey) UncompressedEncode() ([]byte, error) {
 	buf := make([]byte, PublicKeyUncompressedLen)
 	buf[0] = pubKeyUncompressed
@@ -79,6 +84,8 @@ func (pub *PublicKey) UncompressedEncode() ([]byte, error) {
 	return buf, nil
 }
 
+// Parse parses the given data over the curve to populate the
+// public key as receiver
 func (pub *PublicKey) Parse(curve elliptic.Curve, data []byte) error {
 	if len(data) < PublicKeyCompressedLen {
 		return errors.New("Invalid data length")
@@ -103,15 +110,7 @@ func (pub *PublicKey) Parse(curve elliptic.Curve, data []byte) error {
 	return err
 }
 
-func ReverseCopy(dst, src []byte) {
-	offset := len(dst) - len(src)
-	if offset >= 0 {
-		copy(dst[offset:], src)
-	} else {
-		copy(dst, src[-offset:])
-	}
-}
-
+// isOdd checks if a given big integer is odd
 func isOdd(n *big.Int) bool {
 	return 1 == n.Bit(0)
 }
