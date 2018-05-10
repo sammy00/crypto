@@ -35,12 +35,7 @@ func TestPubKeyCompress(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if 0 != pub.X.Cmp(pubDec.X) {
-		t.Fatalf("invalid X: got %x, want %x", pubDec.X.Bytes(), pub.X.Bytes())
-	}
-	if 0 != pub.Y.Cmp(pubDec.Y) {
-		t.Fatalf("invalid Y: got %x, want %x", pubDec.Y.Bytes(), pub.Y.Bytes())
-	}
+	testPubKeyEquality(pub, pubDec, t)
 }
 
 func TestPubKeyParsing2(t *testing.T) {
@@ -126,20 +121,10 @@ func TestPubKeyUncompressedEncoding(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//t.Logf("%+v\n", pub)
-	//t.Logf("   X: %x\n", pub.X.Bytes())
-	//t.Logf("   Y: %x\n", pub.Y.Bytes())
-	//t.Logf("data: %x\n", data)
-
 	pubDec := new(ecdsa.PublicKey)
 	if err := pubDec.UncompressedDecode(pub.Curve, data); nil != err {
 		t.Fatal(err)
 	}
 
-	if 0 != pub.X.Cmp(pubDec.X) {
-		t.Fatalf("invalid X: got %x, want %x", pubDec.X.Bytes(), pub.X.Bytes())
-	}
-	if 0 != pub.Y.Cmp(pubDec.Y) {
-		t.Fatalf("invalid Y: got %x, want %x", pubDec.Y.Bytes(), pub.Y.Bytes())
-	}
+	testPubKeyEquality(pub, pubDec, t)
 }
