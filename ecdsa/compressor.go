@@ -1,9 +1,6 @@
 package ecdsa
 
 import (
-	"errors"
-	"math/big"
-
 	"github.com/sammy00/crypto/elliptic"
 )
 
@@ -68,29 +65,4 @@ type PublicKeyUncompressedCodec interface {
 func IsPublicKeyCompressed(pubKey []byte) bool {
 	return (len(pubKey) == PublicKeyCompressedLen) &&
 		((pubKey[0] & 0xfe) == pubKeyCompressed)
-}
-
-// DecompressPoint estimates the Y coordinate for the given X coordinate
-// over a given **Koblitz** curve
-func DecompressPoint(curve elliptic.Curve, x *big.Int, yOdd bool) (*big.Int, error) {
-	params := curve.Params()
-
-	// Y = +-sqrt(x^3+B)
-	x3 := new(big.Int).Mul(x, x)
-	x3.Mul(x3, x)
-	x3.Add(x3, params.B)
-	x3.Mod(x3, params.P) // normalize x3
-
-	y := new(big.Int).ModSqrt(x3, params.P)
-
-	if isOdd(y) != yOdd {
-		y.Sub(params.P, y)
-	}
-	if isOdd(y) != yOdd {
-		return nil, errors.New("oddness of y is wrong")
-	}
-
-	// check against on curve???
-
-	return y, nil
 }

@@ -23,8 +23,11 @@ package elliptic
 //		 http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html
 
 import (
+	"errors"
 	"math/big"
 	"sync"
+
+	"github.com/sammy00/crypto/misc"
 )
 
 var (
@@ -48,6 +51,30 @@ func (curve *KoblitzCurve) Add(x1, y1, x2, y2 *big.Int) (x, y *big.Int) {
 	z2 := zForAffine(x2, y2)
 
 	return curve.affineFromJacobian(curve.addJacobian(x1, y1, z1, x2, y2, z2))
+}
+
+// DecompressPoint estimates the Y coordinate for the given X coordinate
+func (curve *KoblitzCurve) DecompressPoint(x *big.Int, yOdd bool) (*big.Int, error) {
+	params := curve.Params()
+
+	// Y = +-sqrt(x^3+B)
+	x3 := new(big.Int).Mul(x, x)
+	x3.Mul(x3, x)
+	x3.Add(x3, params.B)
+	x3.Mod(x3, params.P) // normalize x3
+
+	y := new(big.Int).ModSqrt(x3, params.P)
+
+	if misc.IsOdd(y) != yOdd {
+		y.Sub(params.P, y)
+	}
+	if misc.IsOdd(y) != yOdd {
+		return nil, errors.New("oddness of y is wrong")
+	}
+
+	// check against on curve???
+
+	return y, nil
 }
 
 // Double calculates 2*(x,y)

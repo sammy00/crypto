@@ -36,6 +36,9 @@ type Curve interface {
 	// ScalarBaseMult returns k*G, where G is the base point of the group
 	// and k is an integer in big-endian form.
 	ScalarBaseMult(k []byte) (x, y *big.Int)
+	// DecompressPoint estimates the Y coordinate for the given X coordinate
+	// over the curve
+	DecompressPoint(x *big.Int, yOdd bool) (*big.Int, error)
 }
 
 // GenerateKey returns a public/private key pair. The private key is generated using the given reader, which must return random data.
@@ -81,7 +84,9 @@ func Marshal(curve Curve, x, y *big.Int) []byte {
 	return ret
 }
 
-// Unmarshal converts a point, serialized by Marshal, into an (x,y) pair. It is an error if the point is not in uncompressed form or is not on the curve. On error, x = nil.
+// Unmarshal converts a point, serialized by Marshal, into an (x,y) pair.
+// It is an error if the point is not in uncompressed form or is not on
+// the curve. On error, x = nil.
 func Unmarshal(curve Curve, data []byte) (x, y *big.Int) {
 	byteLen := (curve.Params().BitSize + 7) >> 3
 	if len(data) != 1+2*byteLen {

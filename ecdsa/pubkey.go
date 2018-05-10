@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/sammy00/crypto/elliptic"
+	"github.com/sammy00/crypto/misc"
 )
 
 // PublicKey represents an ECDSA public key.
@@ -19,10 +20,10 @@ func (pub *PublicKey) Compress() ([]byte, error) {
 
 	// 1st byte tells the sign of Y
 	buf[0] = pubKeyCompressed
-	if isOdd(pub.Y) {
+	if misc.IsOdd(pub.Y) {
 		buf[0] |= 0x01 // make it 3 for an odd Y
 	}
-	ReverseCopy(buf[1:], pub.X.Bytes())
+	misc.ReverseCopy(buf[1:], pub.X.Bytes())
 
 	return buf, nil
 }
@@ -42,7 +43,8 @@ func (pub *PublicKey) Decompress(curve elliptic.Curve, data []byte) error {
 
 	pub.X = new(big.Int).SetBytes(data[1:])
 	var err error
-	pub.Y, err = DecompressPoint(curve, pub.X, yOdd)
+	//pub.Y, err = DecompressPoint(curve, pub.X, yOdd)
+	pub.Y, err = curve.DecompressPoint(pub.X, yOdd)
 
 	return err
 }
@@ -77,9 +79,9 @@ func (pub *PublicKey) UncompressedEncode() ([]byte, error) {
 	ell := (PublicKeyUncompressedLen - 1) / 2
 
 	offset := 1
-	ReverseCopy(buf[offset:(offset+ell)], pub.X.Bytes())
+	misc.ReverseCopy(buf[offset:(offset+ell)], pub.X.Bytes())
 	offset += ell
-	ReverseCopy(buf[offset:(offset+ell)], pub.Y.Bytes())
+	misc.ReverseCopy(buf[offset:(offset+ell)], pub.Y.Bytes())
 
 	return buf, nil
 }
@@ -108,9 +110,4 @@ func (pub *PublicKey) Parse(curve elliptic.Curve, data []byte) error {
 	}
 
 	return err
-}
-
-// isOdd checks if a given big integer is odd
-func isOdd(n *big.Int) bool {
-	return 1 == n.Bit(0)
 }

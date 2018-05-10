@@ -1,4 +1,11 @@
-package ecdsa
+package misc
+
+import "math/big"
+
+// IsOdd checks if a given big integer is odd
+func IsOdd(n *big.Int) bool {
+	return 1 == n.Bit(0)
+}
 
 // ReverseCopy fill bytes from src into dst from end to start
 func ReverseCopy(dst, src []byte) {
