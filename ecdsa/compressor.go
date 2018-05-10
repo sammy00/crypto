@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	PublicKeyCompressedLen   = 33
+	// PublicKeyCompressedLen specifies the length in bytes of pubkey in compressed form
+	PublicKeyCompressedLen = 33
+	// PublicKeyUncompressedLen specifies the length in bytes of pubkey in uncompressed form
 	PublicKeyUncompressedLen = 65
 )
 

@@ -1,6 +1,7 @@
 package ecdsa_test
 
 import (
+	"bytes"
 	"crypto/rand"
 	mrand "math/rand"
 	"strings"
@@ -93,7 +94,42 @@ func TestPubKeyCompress(t *testing.T) {
 	}
 }
 
-func TestPubKeyParsing(t *testing.T) {
+func TestPubKeyParsing2(t *testing.T) {
+	secp256k1Curve := elliptic.P256k1()
+	for i, v := range pubKeyTestVec {
+		pub := new(ecdsa.PublicKey)
+		if err := pub.Parse(secp256k1Curve, v.key); nil != err {
+			if v.isValid {
+				t.Errorf("#%d: '%s' failure due to: %s\n", i, v.name, err)
+			}
+			continue
+		}
+		if !v.isValid {
+			t.Errorf("#%d should fail\n", i)
+			continue
+		}
+
+		var err error
+		var data []byte
+		switch v.format {
+		case PubKeyCompressed:
+			data, err = pub.UncompressedEncode()
+		case PubKeyUncompressed:
+			data, err = pub.Compress()
+		}
+
+		if nil != err {
+			t.Errorf("#%d fail due to %s\n", i, err)
+			continue
+		}
+
+		if bytes.Equal(v.key, data) {
+			t.Errorf("invalid data: got %x, want %x\n", data, v.key)
+		}
+	}
+}
+
+func TestPubKeyParsing1(t *testing.T) {
 	priv, err := ecdsa.GenerateKey(elliptic.P256k1(), rand.Reader)
 	if nil != err {
 		t.Fatal(err)

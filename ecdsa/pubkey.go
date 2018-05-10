@@ -94,6 +94,12 @@ func (pub *PublicKey) Parse(curve elliptic.Curve, data []byte) error {
 		err = errors.New("Invalid format tag")
 	}
 
+	if nil == err {
+		if !curve.IsOnCurve(pub.X, pub.Y) {
+			err = errors.New("The parsed point is off curve")
+		}
+	}
+
 	return err
 }
 
