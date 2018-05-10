@@ -32,12 +32,6 @@ type PrivateKey struct {
 	D *big.Int // private scalar
 }
 
-// PublicKey represents an ECDSA public key.
-type PublicKey struct {
-	elliptic.Curve
-	X, Y *big.Int
-}
-
 // ecdsaSignature assists in marshaling the signature
 type ecdsaSignature struct {
 	R, S *big.Int
