@@ -1,6 +1,6 @@
 # `crypto`: a cryptography library in Go
 
-![Version Badge](https://img.shields.io/badge/crypto-v0.1.0-blue.svg)
+![Version Badge](https://img.shields.io/badge/crypto-v0.2.0-blue.svg)
 [![License Badge](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](LICENSE)
 [![Build Status](https://travis-ci.org/sammy00/crypto.svg?branch=master)](https://travis-ci.org/sammy00/crypto) 
 
