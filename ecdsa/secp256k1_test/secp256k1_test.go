@@ -49,7 +49,7 @@ func TestBTCSecp256k1(t *testing.T) {
 // TestSecp256k1LocalAgainstBTC1 check if the local
 // secp256k1 can verify the signature by btcec
 func TestSecp256k1LocalAgainstBTC1(t *testing.T) {
-	numItr := (1 << 16)
+	numItr := (1 << 10)
 	if testing.Short() {
 		numItr = 256
 	}
@@ -80,7 +80,7 @@ func TestSecp256k1LocalAgainstBTC1(t *testing.T) {
 // by the official btcec package can verify the signature
 // by our local secp256k1
 func TestSecp256k1LocalAgainstBTC2(t *testing.T) {
-	numItr := (1 << 16)
+	numItr := (1 << 10)
 	if testing.Short() {
 		numItr = 256
 	}
