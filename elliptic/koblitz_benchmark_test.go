@@ -3,7 +3,7 @@ package elliptic_test
 import (
 	"testing"
 
-	"github.com/btcec"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/sammy00/crypto/elliptic"
 )
 
