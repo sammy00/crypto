@@ -1,6 +1,8 @@
 package secp256k1_test
 
 import (
+	stdECDSA "crypto/ecdsa"
+	stdElliptic "crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"testing"
@@ -27,6 +29,16 @@ func BenchmarkGenerateKey(b *testing.B) {
 		bb.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				ecdsa.GenerateKey(curve, rand.Reader)
+			}
+		})
+	})
+
+	b.Run("Go-ECDSA", func(bb *testing.B) {
+		curve := stdElliptic.P256()
+		bb.ResetTimer()
+		bb.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				stdECDSA.GenerateKey(curve, rand.Reader)
 			}
 		})
 	})
