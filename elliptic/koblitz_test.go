@@ -5,8 +5,23 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/sammy00/crypto/elliptic"
 )
+
+func TestKoblitzBasePoint(t *testing.T) {
+	koblitzBTC := btcec.S256()
+
+	koblitzLocal := elliptic.P256k1().Params()
+
+	if 0 != koblitzBTC.Gx.Cmp(koblitzLocal.Gx) {
+		t.Fatalf("invalid Gx: got %s, want %s", koblitzLocal.Gx.String(), koblitzBTC.Gx.String())
+	}
+
+	if 0 != koblitzBTC.Gy.Cmp(koblitzLocal.Gy) {
+		t.Fatalf("invalid Gx: got %s, want %s", koblitzLocal.Gy.String(), koblitzBTC.Gy.String())
+	}
+}
 
 func TestKoblitzMarshaling(t *testing.T) {
 	curve := elliptic.P256k1()

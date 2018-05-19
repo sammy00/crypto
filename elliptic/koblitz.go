@@ -125,8 +125,8 @@ func (curve *KoblitzCurve) ScalarMult(x1, y1 *big.Int, k []byte) (x, y *big.Int)
 		}
 	}
 
-	x, y = curve.affineFromJacobian(xx, yy, zz)
-	return
+	//x, y = curve.affineFromJacobian(xx, yy, zz)
+	return curve.affineFromJacobian(xx, yy, zz)
 }
 
 // addJacobian estimate the sum of two Jacobian point (x1,y1,z1) and (x2,y2,z2)
@@ -320,7 +320,7 @@ func initP256K1() {
 func zForAffine(x, y *big.Int) *big.Int {
 	z := new(big.Int)
 	// (x,y) isn't the point at the infinity
-	if (0 != x.Sign()) || (0 != x.Sign()) {
+	if (0 != x.Sign()) || (0 != y.Sign()) {
 		z.SetInt64(1)
 	}
 

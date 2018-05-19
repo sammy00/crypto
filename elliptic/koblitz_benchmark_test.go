@@ -32,6 +32,16 @@ func BenchmarkAdd(b *testing.B) {
 			}
 		})
 	})
+	b.Run("Go-ECDSA", func(bb *testing.B) {
+		curve := goelliptic.P256()
+
+		bb.ResetTimer()
+		bb.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				curve.Add(Gx, Gy, Gx, Gy)
+			}
+		})
+	})
 }
 
 func BenchmarkDouble(b *testing.B) {
